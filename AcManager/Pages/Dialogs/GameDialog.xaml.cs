@@ -244,6 +244,10 @@ namespace AcManager.Pages.Dialogs {
             Model.SubCancellationCallback = subCancellationCallback;
         }
 
+        public string GetCurrentMessage() {
+            return Model.WaitingStatus;
+        }
+
         private void MonitorExitStatus() {
             if (_shuttingDownTimer == null) {
                 _shuttingDownTimer = new DispatcherTimer(TimeSpan.FromSeconds(0.5d), DispatcherPriority.Background, (s, e) => {
@@ -290,7 +294,7 @@ namespace AcManager.Pages.Dialogs {
                             var newLocation = FilesStorage.Instance.GetFilename(MainExecutingFile.Name);
                             File.Copy(MainExecutingFile.Location, newLocation, true);
                             WindowsHelper.ViewFile(newLocation);
-                            ProcessExtension.Start(newLocation, new[] { @"--restart", @"--move-app=" + MainExecutingFile.Location });
+                            ProcessExtension.Start(newLocation, new[] { @"--restart", @"--move-app=" + MainExecutingFile.Location, @"--oculus-fix-applied" });
                             Environment.Exit(0);
                         } catch (Exception e) {
                             NonfatalError.Notify("Failed to move Content Manager executable", "I’m afraid you’ll have to do it manually.", e);
@@ -419,7 +423,7 @@ namespace AcManager.Pages.Dialogs {
                 var sessionBest = sessionBestLap?.Time;
 
                 data.PlayerEntries = (
-                        from player in result.Players
+                        from player in result.Players?.Where(x => x.CarId != "nul")
                         let car = CarsManager.Instance.GetById(player.CarId ?? "")
                         let carSkin = car?.GetSkinById(player.CarSkinId ?? "")
                         select new { Player = player, Car = car, CarSkin = carSkin }
